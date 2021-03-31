@@ -1,2 +1,2 @@
 # PresidentCardGame
-Multiplayers cardgame 
+Multiplayer cardgame 
