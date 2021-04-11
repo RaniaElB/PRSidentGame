@@ -80,8 +80,7 @@ int main() {
 	
     sleep(10);
     for (i=0; i < MAXPLAYERS; i++){
-		kill(arrayPlayer[i].pid, 10);
-		printf("signal SIGUSR1 envoyé à %s(%i)\n",arrayPlayer[i].name,arrayPlayer[i].pid);
+		
 		}
 
 /*    close(descripteur_pipe_ecriture);*/
@@ -153,9 +152,12 @@ printf("ppc : %s\n", path_pipe_client);
 
 		write(descripteur_pipe_ecriture,message,CHAR_BUFFER_LENGTH);
 		fprintf(stdout,"Serveur - message envoyé ..\n");
-/*		sleep(10);*/
-/*		close(descripteur_pipe_ecriture);*/
-/*    fprintf(stdout,"Serveur - fermeture du tube nommé '%s'.\n",PATH_PIPE);*/
+		
+		kill(pid,10);	
+		printf("signal SIGUSR1 envoyé à %i\n",pid); 
+		sleep(1);
+		close(descripteur_pipe_ecriture);
+    		fprintf(stdout,"Serveur - fermeture du tube nommé '%s'.\n",PATH_PIPE);
 }
 
 void destroyMemoireLobby(){
