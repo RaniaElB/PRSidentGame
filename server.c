@@ -20,12 +20,16 @@ int rand_range(int upper_limit);
 void initMemoireLobby();
 void readMemoireLobby();
 void destroyMemoireLobby();
+void initMemoirePileCartes();
 void createPipe(char* message, int pid);
 bool array_contains(int* haystack, int needle, int length);
+void sigusr_handler();
 
 int shmId;
+int shmIdCardsPile;
 int maxPlayers;
 char * seg_ptg;
+char * cardsPile;
 int nbJoueurs;
 struct player arrayPlayer[MAXPLAYERS]; 
 
@@ -55,17 +59,51 @@ int main() {
 	printf("players : %i/%i, starting game.\n", nbJoueurs, MAXPLAYERS);
 	sem_unlink("memLobby");
 	destroyMemoireLobby();
+	//distribution des cartes dans des pipes
 	deal_cards();
+	//initialisation partie
 	int i;
-	for (i=0; i < nbJoueurs; i++){
+	int nbTours = 0;
+	//init memoire ptg
+	initMemoirePileCartes();
+	//init semaphore
+	sem_t *semMemCardsPile;
+	sem_unlink("/memCardsPile");
+	if((semMemCardsPile= sem_open("/memCardsPile", O_CREAT | O_EXCL, S_IRWXU, 1)) == SEM_FAILED)
+	{	
+		perror("can not open semMemCardsPile");
+		exit(-1);
+	}
+	// debut partie
+	while(1){
+	for (i=0; i < nbJoueurs; i++){ //while ???? là on n'a que N tours de jeu
+	printf("TOUR %i\n",nbTours);
 		int j;
 		for (j=0; j < nbJoueurs; j++){
 		if (i == j){
 			kill(arrayPlayer[j].pid, SIGUSR1);
 		}
-		else if (i != 0) {
+		else if (!(nbTours == 0 && i == 0)) {
 			kill(arrayPlayer[j].pid, SIGUSR2);}
 	}
+	sigset_t set;
+	struct sigaction usr1, usr2;
+	usr1.sa_handler= &sigusr_handler;
+	usr2.sa_handler= &sigusr_handler;
+	sigemptyset(&set);
+	sigaction(SIGUSR1,&usr1,NULL);
+/*	sigaction(SIGUSR2,&usr2,NULL);*/
+	sigaddset(&set, SIGUSR1);
+	int signal;
+	printf("waiting for %s to play... \n", arrayPlayer[i].name);
+   	sigwait(&set,&signal);
+	printf("%s played!! \n", arrayPlayer[i].name);
+	sem_wait(semMemCardsPile);
+	printf("pile de cartes :%s\n", cardsPile);
+	sem_post(semMemCardsPile);
+	
+	}
+	nbTours++;
 	}
 	
     return EXIT_SUCCESS;
@@ -78,6 +116,7 @@ void initMemoireLobby(){
 	printf("shm ID : %i \n", shmId);
 	seg_ptg = (char*) shmat(shmId, NULL, 0);
 }
+
 void readMemoireLobby()
 {
 printf("seg : %s\n", seg_ptg);
@@ -106,6 +145,13 @@ strcpy(seg_ptg, "\0");
 
 }
 
+void initMemoirePileCartes(){
+	key_t cleSegment;
+	CHECK(cleSegment=ftok("/memCardsPile", 1), "fack, can't create key");
+	CHECK(shmIdCardsPile=shmget(cleSegment, 200 * sizeof(char), IPC_CREAT | SHM_R | SHM_W), "fack, can't create shm");
+	printf("shm ID : %i \n", shmIdCardsPile);
+	cardsPile = (char*) shmat(shmId, NULL, 0);
+}
 void createPipe(char* message, int pid){
 int descripteur_pipe_ecriture = 0;
 char path_pipe_client[28];
@@ -130,7 +176,7 @@ printf("ppc : %s\n", path_pipe_client);
 		fprintf(stdout,"Serveur - message envoyé ..\n");
 		kill(pid,10);	
 		printf("signal SIGUSR1 envoyé à %i\n",pid); 
-		sleep(5);
+		sleep(2);
 		close(descripteur_pipe_ecriture);
     		fprintf(stdout,"Serveur - fermeture du tube nommé '%s'.\n",path_pipe_client);
 	    	CHECK(
@@ -182,6 +228,11 @@ bool array_contains(int* haystack, int needle, int length) {
 		}
 	}
 	return false;
+}
+
+void sigusr_handler(int sig, siginfo_t *si, void* arg)
+{
+	//rien à mettre dedans???
 }
 
 int rand_range(int upper_limit) {

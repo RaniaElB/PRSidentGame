@@ -7,7 +7,8 @@
 #include <sys/types.h>
 #include <sys/stat.h>
 #include <signal.h>
-#include "cards.h"
+#include <stdbool.h>
+#include "cards.c"
 
 #define MAX 10
 #define MESSAGE_SIZE 82
@@ -15,12 +16,18 @@
 #define CHAR_BUFFER_LENGTH 100
 
 void initMemoireLobby();
+void initMemoirePileCartes();
 void input();
-void usr1_handler();
+void sigusr_handler();
+void afficher_cartes();
 int decode_msg_payload(char** raw_payload, int* decoded_payload, int max_elements); 
 int cards[DECK_SIZE/2]; // todo : set la taille de cards un peu mieux
+int nbCards;
 char *myName;
-int shmId;
+int playing ;
+int shmId; // shmId memLobby
+int shmIdCardsPile;
+int pidServer;
 int main(int argc,char * argv[]) 
 {
 printf("my pid: %i\n",getpid());
@@ -50,10 +57,12 @@ printf("my pid: %i\n",getpid());
 
 	fprintf(stdout,"PID du processus : %d\n",getpid());
 	sigset_t set;
-	struct sigaction usr1;
-	usr1.sa_handler= &usr1_handler;
+	struct sigaction usr1, usr2;
+	usr1.sa_handler= &sigusr_handler;
+	usr2.sa_handler= &sigusr_handler;
 	sigemptyset(&set);
 	sigaction(SIGUSR1,&usr1,NULL);
+	sigaction(SIGUSR2,&usr2,NULL);
 	sigaddset(&set, SIGUSR1);
 	int signal;
 /*	printf("waiting for signal SIGUSR1\n");*/
@@ -65,7 +74,7 @@ printf("my pid: %i\n",getpid());
 int pid = getpid();
 
 char path_pipe_client[28];
-snprintf(path_pipe_client, sizeof(path_pipe_client)+sizeof(pid), "%s%i", PATH_PIPE, pid);
+snprintf(path_pipe_client, sizeof(PATH_PIPE)+sizeof(pid), "%s%i", PATH_PIPE, pid);
 printf("ppc : %s\n", path_pipe_client);
 
 		CHECK(
@@ -84,14 +93,57 @@ printf("ppc : %s\n", path_pipe_client);
       i++;
       token = strtok(NULL, " ");
    }
-   
+   nbCards = i;
+   printf("waiting to start\n");
+   sigemptyset( &set );
+   sigaddset(&set, SIGUSR1);
+   sigaddset(&set, SIGUSR2);
+   playing = 1 ;
+   int nbTours = 0;
+   while(playing){
+   sigwait(&set,&signal);
+	sem_t *semMemCardsPile;
+	char * cardsPile;
+    if(nbTours == 0){
+   	initMemoirePileCartes();
+	if((semMemCardsPile= sem_open("/memCardsPile", O_CREAT, S_IRWXU, 1)) == SEM_FAILED)
+	{	
+		perror("can not open semMemCardsPile");
+		exit(-1);
+	}
+	cardsPile = shmat(shmIdCardsPile, NULL, 0);
+	}
+   system("clear");
+     printf("==== %s ====\n", myName);
+   switch(signal){
+   case SIGUSR1: 
+ 
+     printf("I must start playing!!!\n");
+     afficher_cartes();
+     int index;
+     printf("please enter the index of the card you want to play :\n"); 
+     scanf("%i",&index);
+     sem_wait(semMemCardsPile);
+     
+     printf("you selected : %s\n", get_card_name(cards[index])); //todo : ecrire dans shm
+     char bufferPile[20]; //todo : modifier size car arbitraire
+/*     sprintf(bufferPile, "%i",cards[index]);*/ //todo BUG ICI/////////
+/*	strcat(cardsPile, bufferPile);*/ //todo BUG ICI////////
+	sem_post(semMemCardsPile);
+     
+     printf("to server : kill(%i, SIGUSR1);\n", pidServer);
+     kill(pidServer, SIGUSR1);
+     break;
+     case SIGUSR2: //other players need to check the shm to see what card has been played
+     printf("I must check the pile!!!\n");
+     break;
 	//HERE
-	
-	
-    close(descripteur_pipe_lecture);
+	}
+	nbTours++;
+}
+    close(descripteur_pipe_lecture); // todo : pas au meilleur endroit, on peut le faire avant?
     fprintf(stdout,"Client - fermeture du programme..\n");
     return EXIT_SUCCESS;
-
 }
 }
 void initMemoireLobby(){
@@ -100,15 +152,36 @@ void initMemoireLobby(){
 	CHECK(shmId=shmget(cleSegment, 200 * sizeof(char), IPC_CREAT | SHM_R | SHM_W), "fack, can't create shm");
 	struct shmid_ds shmid_stats;
    	shmctl(shmId, IPC_STAT, &shmid_stats);
-	printf("PID du créateur:%i\n", shmid_stats.shm_cpid);  // to save in order to send signal
+	printf("PID du créateur:%i\n", shmid_stats.shm_cpid); 
+	pidServer = shmid_stats.shm_cpid;
 	printf("shm ID : %i \n", shmId);
 	
 }
-void usr1_handler(int sig, siginfo_t *si, void* arg)
-{
-//rien à mettre eud dans???
+
+void initMemoirePileCartes(){
+	key_t cleSegment;
+	CHECK(cleSegment=ftok("/memCardsPile", 1), "fack, can't create key");
+	CHECK(shmIdCardsPile=shmget(cleSegment, 200 * sizeof(char), IPC_CREAT | SHM_R | SHM_W), "fack, can't create shm");
 }
 
+void sigusr_handler(int sig, siginfo_t *si, void* arg)
+{
+//rien à mettre dedans???
+}
+
+
+void afficher_cartes(){
+int i;
+for (i=0; i <nbCards; i++){
+	printf("[%02i] %s\n", i, get_card_name(cards[i]));
+}
+}
+
+void removeCard(int index){
+for (;index < nbCards-1; index++){
+	cards[index] = cards[index+1];
+}
+}
 void input (char * string, int length){
 	fgets(string, MAX+1, stdin);
 	while (*string != '\n')
