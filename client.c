@@ -7,6 +7,7 @@
 #include <sys/types.h>
 #include <sys/stat.h>
 #include <signal.h>
+#include "cards.h"
 
 #define MAX 10
 #define MESSAGE_SIZE 82
@@ -16,7 +17,8 @@
 void initMemoireLobby();
 void input();
 void usr1_handler();
-
+int decode_msg_payload(char** raw_payload, int* decoded_payload, int max_elements); 
+int cards[DECK_SIZE/2]; // todo : set la taille de cards un peu mieux
 char *myName;
 int shmId;
 int main(int argc,char * argv[]) 
@@ -54,9 +56,9 @@ printf("my pid: %i\n",getpid());
 	sigaction(SIGUSR1,&usr1,NULL);
 	sigaddset(&set, SIGUSR1);
 	int signal;
-	printf("waiting for signal SIGUSR1\n");
+/*	printf("waiting for signal SIGUSR1\n");*/
 	sigwait(&set,&signal);
-	printf("sigwait ended\n");
+/*	printf("sigwait ended\n");*/
 	if(signal){
 
 	
@@ -70,19 +72,27 @@ printf("ppc : %s\n", path_pipe_client);
             descripteur_pipe_lecture = open(path_pipe_client,O_RDONLY),
             "Impossible d'ouvrir le tube nommé.\n"
     	);
-		char message[CHAR_BUFFER_LENGTH] = "";
+		char message[CHAR_BUFFER_LENGTH] = ""; 
+	
 		read(descripteur_pipe_lecture,message,CHAR_BUFFER_LENGTH);
 		fprintf(stdout,"Client - message reçu : '%s'\n",message);
-	}
-
-	
-	sleep(15);
+   char * token = strtok(message, " ");
+   // loop through the string to extract all other tokens
+  int i=0;
+   while( token != NULL ) {
+      cards[i]=atoi(token);
+      i++;
+      token = strtok(NULL, " ");
+   }
+   
+	//HERE
 	
 	
     close(descripteur_pipe_lecture);
     fprintf(stdout,"Client - fermeture du programme..\n");
     return EXIT_SUCCESS;
 
+}
 }
 void initMemoireLobby(){
 	key_t cleSegment;

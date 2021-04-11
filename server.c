@@ -56,7 +56,17 @@ int main() {
 	sem_unlink("memLobby");
 	destroyMemoireLobby();
 	deal_cards();
-	
+	int i;
+	for (i=0; i < nbJoueurs; i++){
+		int j;
+		for (j=0; j < nbJoueurs; j++){
+		if (i == j){
+			kill(arrayPlayer[j].pid, SIGUSR1);
+		}
+		else if (i != 0) {
+			kill(arrayPlayer[j].pid, SIGUSR2);}
+	}
+	}
 	
     return EXIT_SUCCESS;
 }
@@ -115,13 +125,12 @@ printf("ppc : %s\n", path_pipe_client);
 				"Impossible d'ouvrir le tube nommé.\n"
 				);
 
-		//char message[CHAR_BUFFER_LENGTH] = "Cartes joueur i ";
 
 		write(descripteur_pipe_ecriture,message,CHAR_BUFFER_LENGTH);
 		fprintf(stdout,"Serveur - message envoyé ..\n");
 		kill(pid,10);	
 		printf("signal SIGUSR1 envoyé à %i\n",pid); 
-		sleep(1);
+		sleep(5);
 		close(descripteur_pipe_ecriture);
     		fprintf(stdout,"Serveur - fermeture du tube nommé '%s'.\n",path_pipe_client);
 	    	CHECK(
@@ -157,7 +166,7 @@ void deal_cards() {
 			str_length += sprintf(msg+str_length, "%d ", random_card);
 			dealt_cards[total_dealt_cards++] = random_card;
 		}
-		//msg = deal_cards;
+		
 		//distribuer les cartes choisies au joueur
 		createPipe(msg, arrayPlayer[player].pid);
 		printf("cards dealt : \n");
