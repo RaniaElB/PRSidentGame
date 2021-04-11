@@ -55,46 +55,9 @@ int main() {
 	printf("players : %i/%i, starting game.\n", nbJoueurs, MAXPLAYERS);
 	sem_unlink("memLobby");
 	destroyMemoireLobby();
-
-/*	int descripteur_pipe_ecriture = 0;*/
-/*		CHECK(*/
-/*            mkfifo(PATH_PIPE,0600),*/
-/*            "Impossible de créer un tube nommé.\n"*/
-/*		);*/
-/*		fprintf(stdout,"Serveur - tube nommé créé.\n");*/
-/*		*/
-/*		CHECK(*/
-/*				descripteur_pipe_ecriture = open(PATH_PIPE,O_RDWR | O_NONBLOCK),*/
-/*				// Remarque : l'appel de open() avec l'attribut WR_ONLY est bloquant sans l'attribut O_NONBLOCK*/
-/*				// Il faut que le tube nommé soit ouvert en lecture avant d'être ouvert en écriture.*/
-/*				// Lorsque ce n'est pas le cas, et qu'on ajoute l'attribut O_NONBLOCK, on obtient l'erreur "No such device or address"*/
-/*				"Impossible d'ouvrir le tube nommé.\n"*/
-/*				);*/
-
-/*		char message[CHAR_BUFFER_LENGTH] = "En attente d'un message ..";*/
-
-/*		write(descripteur_pipe_ecriture,message,CHAR_BUFFER_LENGTH);*/
-/*		fprintf(stdout,"Serveur - message envoyé ..\n");*/
-		/*int i;
-		for (i=0; i < MAXPLAYERS; i++){
-		createPipe(arrayPlayer[i].pid);
-		}	*/
-		deal_cards();
+	deal_cards();
 	
 	
-    sleep(10);
-    for (int i=0; i < MAXPLAYERS; i++){
-		
-		}
-
-/*    close(descripteur_pipe_ecriture);*/
-/*    fprintf(stdout,"Serveur - fermeture du tube nommé '%s'.\n",PATH_PIPE);*/
-
-/*    CHECK(*/
-/*            remove(PATH_PIPE),*/
-/*            "Impossible de supprimer le tube nommé.\n"*/
-/*    );*/
-/*    fprintf(stdout,"Serveur - fichier '%s' supprimé.\n",PATH_PIPE);*/
     return EXIT_SUCCESS;
 }
 
@@ -154,14 +117,18 @@ printf("ppc : %s\n", path_pipe_client);
 
 		//char message[CHAR_BUFFER_LENGTH] = "Cartes joueur i ";
 
-		write(descripteur_pipe_ecriture,&message,CHAR_BUFFER_LENGTH);
+		write(descripteur_pipe_ecriture,message,CHAR_BUFFER_LENGTH);
 		fprintf(stdout,"Serveur - message envoyé ..\n");
-		
 		kill(pid,10);	
 		printf("signal SIGUSR1 envoyé à %i\n",pid); 
 		sleep(1);
 		close(descripteur_pipe_ecriture);
-    		fprintf(stdout,"Serveur - fermeture du tube nommé '%s'.\n",PATH_PIPE);
+    		fprintf(stdout,"Serveur - fermeture du tube nommé '%s'.\n",path_pipe_client);
+	    	CHECK(
+		    remove(path_pipe_client),
+		    "Impossible de supprimer le tube nommé.\n"
+		);
+    		fprintf(stdout,"Serveur - fichier '%s' supprimé.\n",path_pipe_client);
 }
 
 void destroyMemoireLobby(){
