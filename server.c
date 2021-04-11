@@ -7,6 +7,7 @@
 #include <unistd.h>
 #include <sys/types.h>
 #include <sys/stat.h>
+#include <stdbool.h>
 
 
 #define MAXPLAYERS 2 //todo modify everywhere in order to make it dynamic
@@ -14,11 +15,13 @@
 #define DEAL		4
 #define PATH_PIPE "./fifo-serveur-"
 #define CHAR_BUFFER_LENGTH 100
+int rand_range(int upper_limit);
 
 void initMemoireLobby();
 void readMemoireLobby();
 void destroyMemoireLobby();
-void createPipe();
+void createPipe(char* message, int pid);
+bool array_contains(int* haystack, int needle, int length);
 
 int shmId;
 int maxPlayers;
@@ -72,14 +75,15 @@ int main() {
 
 /*		write(descripteur_pipe_ecriture,message,CHAR_BUFFER_LENGTH);*/
 /*		fprintf(stdout,"Serveur - message envoyé ..\n");*/
-		int i;
+		/*int i;
 		for (i=0; i < MAXPLAYERS; i++){
 		createPipe(arrayPlayer[i].pid);
-		}	
+		}	*/
+		deal_cards();
 	
 	
     sleep(10);
-    for (i=0; i < MAXPLAYERS; i++){
+    for (int i=0; i < MAXPLAYERS; i++){
 		
 		}
 
@@ -129,7 +133,7 @@ strcpy(seg_ptg, "\0");
 
 }
 
-void createPipe(int pid){
+void createPipe(char* message, int pid){
 int descripteur_pipe_ecriture = 0;
 char path_pipe_client[28];
 snprintf(path_pipe_client, sizeof(path_pipe_client)+sizeof(pid), "%s%i", PATH_PIPE, pid);
@@ -148,9 +152,9 @@ printf("ppc : %s\n", path_pipe_client);
 				"Impossible d'ouvrir le tube nommé.\n"
 				);
 
-		char message[CHAR_BUFFER_LENGTH] = "Cartes joueur i ";
+		//char message[CHAR_BUFFER_LENGTH] = "Cartes joueur i ";
 
-		write(descripteur_pipe_ecriture,message,CHAR_BUFFER_LENGTH);
+		write(descripteur_pipe_ecriture,&message,CHAR_BUFFER_LENGTH);
 		fprintf(stdout,"Serveur - message envoyé ..\n");
 		
 		kill(pid,10);	
@@ -165,7 +169,7 @@ void destroyMemoireLobby(){
 	CHECK(shmdt(seg_ptg), "cannot detach from the segment");
 }
 
-/*
+
 void deal_cards() {
 	int cards_per_player = DECK_SIZE / nbJoueurs;
 	int dealt_cards[cards_per_player * nbJoueurs];
@@ -186,10 +190,25 @@ void deal_cards() {
 			str_length += sprintf(msg+str_length, "%d ", random_card);
 			dealt_cards[total_dealt_cards++] = random_card;
 		}
+		//msg = deal_cards;
 		//distribuer les cartes choisies au joueur
-
+		createPipe(msg, arrayPlayer[player].pid);
 		printf("cards dealt : \n");
 		printf("%s\n", msg);
 	}
 }
-*/
+
+bool array_contains(int* haystack, int needle, int length) {
+	int* array_ptr = haystack;
+	for (; (array_ptr - haystack) < length; array_ptr++) {
+		if (*array_ptr == needle) {
+			return true;
+		}
+	}
+	return false;
+}
+
+int rand_range(int upper_limit) {
+	return (int) (( (double) upper_limit / RAND_MAX) * rand());
+}
+

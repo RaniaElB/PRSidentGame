@@ -16,3 +16,5 @@ struct player {
 	int pid;
 };
 
+void deal_cards();
+
