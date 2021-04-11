@@ -1,5 +1,4 @@
 #include "cards.h"
-#include <stdio.h>
 
 char* card_names[] = {
 	"\xE2\x99\xA0 2 \xE2\x99\xA0",
@@ -60,8 +59,9 @@ char* get_card_name(int card) {
 	return card_names[card];
 }
 
-int main(){
-    printf("%s\n", get_card_name(3));
-
-    return 0;
+int get_card_points(int card) {
+	if (card > 47) {
+		return 1;
+	}
+	return (card / 4) + 2;
 }
