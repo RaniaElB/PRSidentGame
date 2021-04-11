@@ -10,16 +10,18 @@
 
 #define MAX 10
 #define MESSAGE_SIZE 82
-#define PATH_PIPE "./fifo-serveur-1"
+#define PATH_PIPE "./fifo-serveur-"
 #define CHAR_BUFFER_LENGTH 100
 
 void initMemoireLobby();
 void input();
+void usr1_handler();
 
 char *myName;
 int shmId;
 int main(int argc,char * argv[]) 
 {
+printf("my pid: %i\n",getpid());
 	initMemoireLobby();
 	sem_t *semMemLobby;
 	if((semMemLobby= sem_open("/memLobby", O_CREAT, S_IRWXU, 1)) == SEM_FAILED)
@@ -46,23 +48,31 @@ int main(int argc,char * argv[])
 
 	fprintf(stdout,"PID du processus : %d\n",getpid());
 	sigset_t set;
+	struct sigaction usr1;
+	usr1.sa_handler= &usr1_handler;
 	sigemptyset(&set);
+	sigaction(SIGUSR1,&usr1,NULL);
 	sigaddset(&set, SIGUSR1);
 	int signal;
+	printf("waiting for signal SIGUSR1\n");
 	sigwait(&set,&signal);
-	
+	printf("sigwait ended\n");
 	if(signal){
+
+	
+int pid = getpid();
+
+char path_pipe_client[28];
+snprintf(path_pipe_client, sizeof(path_pipe_client)+sizeof(pid), "%s%i", PATH_PIPE, pid);
+printf("ppc : %s\n", path_pipe_client);
+
 		CHECK(
-            descripteur_pipe_lecture = open(PATH_PIPE,O_RDONLY),
+            descripteur_pipe_lecture = open(path_pipe_client,O_RDONLY),
             "Impossible d'ouvrir le tube nommé.\n"
     	);
-
 		char message[CHAR_BUFFER_LENGTH] = "";
-
-		while(1){
-			read(descripteur_pipe_lecture,message,CHAR_BUFFER_LENGTH);
-			fprintf(stdout,"Client - message reçu : '%s'\n",message);
-		}
+		read(descripteur_pipe_lecture,message,CHAR_BUFFER_LENGTH);
+		fprintf(stdout,"Client - message reçu : '%s'\n",message);
 	}
 
 	
@@ -83,6 +93,10 @@ void initMemoireLobby(){
 	printf("PID du créateur:%i\n", shmid_stats.shm_cpid);  // to save in order to send signal
 	printf("shm ID : %i \n", shmId);
 	
+}
+void usr1_handler(int sig, siginfo_t *si, void* arg)
+{
+//rien à mettre eud dans???
 }
 
 void input (char * string, int length){

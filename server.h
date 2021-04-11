@@ -6,6 +6,7 @@
 #include <fcntl.h>
 #include <sys/types.h>
 #include <unistd.h>
+#include <signal.h>
 
 
 #define CHECK(sts, msg) if ((sts) == -1){perror(msg);exit(-1);}

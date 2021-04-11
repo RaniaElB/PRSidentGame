@@ -12,13 +12,13 @@
 #define MAXPLAYERS 2 //todo modify everywhere in order to make it dynamic
 #define MESSAGE_SIZE 82
 #define DEAL		4
-#define PATH_PIPE "./fifo-serveur-1"
+#define PATH_PIPE "./fifo-serveur-"
 #define CHAR_BUFFER_LENGTH 100
 
 void initMemoireLobby();
 void readMemoireLobby();
 void destroyMemoireLobby();
-
+void createPipe();
 
 int shmId;
 int maxPlayers;
@@ -53,39 +53,45 @@ int main() {
 	sem_unlink("memLobby");
 	destroyMemoireLobby();
 
-	int descripteur_pipe_ecriture = 0;
-	if (nbJoueurs == MAXPLAYERS){
-		CHECK(
-            mkfifo(PATH_PIPE,0600),
-            "Impossible de créer un tube nommé.\n"
-		);
-		fprintf(stdout,"Serveur - tube nommé créé.\n");
-		
-		CHECK(
-				descripteur_pipe_ecriture = open(PATH_PIPE,O_RDWR | O_NONBLOCK),
-				// Remarque : l'appel de open() avec l'attribut WR_ONLY est bloquant sans l'attribut O_NONBLOCK
-				// Il faut que le tube nommé soit ouvert en lecture avant d'être ouvert en écriture.
-				// Lorsque ce n'est pas le cas, et qu'on ajoute l'attribut O_NONBLOCK, on obtient l'erreur "No such device or address"
-				"Impossible d'ouvrir le tube nommé.\n"
-				);
+/*	int descripteur_pipe_ecriture = 0;*/
+/*		CHECK(*/
+/*            mkfifo(PATH_PIPE,0600),*/
+/*            "Impossible de créer un tube nommé.\n"*/
+/*		);*/
+/*		fprintf(stdout,"Serveur - tube nommé créé.\n");*/
+/*		*/
+/*		CHECK(*/
+/*				descripteur_pipe_ecriture = open(PATH_PIPE,O_RDWR | O_NONBLOCK),*/
+/*				// Remarque : l'appel de open() avec l'attribut WR_ONLY est bloquant sans l'attribut O_NONBLOCK*/
+/*				// Il faut que le tube nommé soit ouvert en lecture avant d'être ouvert en écriture.*/
+/*				// Lorsque ce n'est pas le cas, et qu'on ajoute l'attribut O_NONBLOCK, on obtient l'erreur "No such device or address"*/
+/*				"Impossible d'ouvrir le tube nommé.\n"*/
+/*				);*/
 
-		char message[CHAR_BUFFER_LENGTH] = "En attente d'un message ..";
+/*		char message[CHAR_BUFFER_LENGTH] = "En attente d'un message ..";*/
 
-		write(descripteur_pipe_ecriture,message,CHAR_BUFFER_LENGTH);
-		fprintf(stdout,"Serveur - message envoyé ..\n");
-
-	}
+/*		write(descripteur_pipe_ecriture,message,CHAR_BUFFER_LENGTH);*/
+/*		fprintf(stdout,"Serveur - message envoyé ..\n");*/
+		int i;
+		for (i=0; i < MAXPLAYERS; i++){
+		createPipe(arrayPlayer[i].pid);
+		}	
 	
-    sleep(15);
+	
+    sleep(10);
+    for (i=0; i < MAXPLAYERS; i++){
+		kill(arrayPlayer[i].pid, 10);
+		printf("signal SIGUSR1 envoyé à %s(%i)\n",arrayPlayer[i].name,arrayPlayer[i].pid);
+		}
 
-    close(descripteur_pipe_ecriture);
-    fprintf(stdout,"Serveur - fermeture du tube nommé '%s'.\n",PATH_PIPE);
+/*    close(descripteur_pipe_ecriture);*/
+/*    fprintf(stdout,"Serveur - fermeture du tube nommé '%s'.\n",PATH_PIPE);*/
 
-    CHECK(
-            remove(PATH_PIPE),
-            "Impossible de supprimer le tube nommé.\n"
-    );
-    fprintf(stdout,"Serveur - fichier '%s' supprimé.\n",PATH_PIPE);
+/*    CHECK(*/
+/*            remove(PATH_PIPE),*/
+/*            "Impossible de supprimer le tube nommé.\n"*/
+/*    );*/
+/*    fprintf(stdout,"Serveur - fichier '%s' supprimé.\n",PATH_PIPE);*/
     return EXIT_SUCCESS;
 }
 
@@ -122,6 +128,34 @@ printf("joueur %lu name: %s, pid:%i\n", i+1, arrayPlayer[i].name, arrayPlayer[i]
 strcpy(seg_ptg, "\0");
 
 
+}
+
+void createPipe(int pid){
+int descripteur_pipe_ecriture = 0;
+char path_pipe_client[28];
+snprintf(path_pipe_client, sizeof(path_pipe_client)+sizeof(pid), "%s%i", PATH_PIPE, pid);
+printf("ppc : %s\n", path_pipe_client);
+		CHECK(
+            mkfifo(path_pipe_client,0600),
+            "Impossible de créer un tube nommé.\n"
+		);
+		fprintf(stdout,"Serveur - tube nommé créé.\n");
+		
+		CHECK(
+				descripteur_pipe_ecriture = open(path_pipe_client,O_RDWR | O_NONBLOCK),
+				// Remarque : l'appel de open() avec l'attribut WR_ONLY est bloquant sans l'attribut O_NONBLOCK
+				// Il faut que le tube nommé soit ouvert en lecture avant d'être ouvert en écriture.
+				// Lorsque ce n'est pas le cas, et qu'on ajoute l'attribut O_NONBLOCK, on obtient l'erreur "No such device or address"
+				"Impossible d'ouvrir le tube nommé.\n"
+				);
+
+		char message[CHAR_BUFFER_LENGTH] = "Cartes joueur i ";
+
+		write(descripteur_pipe_ecriture,message,CHAR_BUFFER_LENGTH);
+		fprintf(stdout,"Serveur - message envoyé ..\n");
+/*		sleep(10);*/
+/*		close(descripteur_pipe_ecriture);*/
+/*    fprintf(stdout,"Serveur - fermeture du tube nommé '%s'.\n",PATH_PIPE);*/
 }
 
 void destroyMemoireLobby(){
