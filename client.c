@@ -220,8 +220,8 @@ int basicPlay(int index, char * message){
 }
 
 void readCardPile(){
-	char * cardsPile2;
-	cardsPile2 = malloc(200);
+	char * cardsPile2; // do we really need this, since strtok still deletes the shm?
+	cardsPile2 = malloc(200); 
 	strcpy(cardsPile2,cardsPile);
    	char * token = strtok(cardsPile2, " ");
    	int i = 0;
