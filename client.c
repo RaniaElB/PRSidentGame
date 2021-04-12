@@ -22,7 +22,7 @@ void sigusr_handler();
 void afficher_cartes();
 int decode_msg_payload(char** raw_payload, int* decoded_payload, int max_elements); 
 int basicPlay(int index,char * message);
-void readCardPile();
+int readCardPile();
 int cards[DECK_SIZE/2]; // todo : set la taille de cards un peu mieux
 int nbCards;
 char *myName;
@@ -124,7 +124,10 @@ printf("ppc : %s\n", path_pipe_client);
      printf("==== %s ====\n", myName);
     switch(signal){
    case SIGUSR1: 
- 
+    sem_wait(semMemCardsPile);
+	 //printf("contenu cardsPile %s\n", cardsPile);
+	 readCardPile();
+	 sem_post(semMemCardsPile);
      printf("I must start playing!!!\n");
      afficher_cartes();
      int index;
@@ -145,7 +148,7 @@ printf("ppc : %s\n", path_pipe_client);
      case SIGUSR2: //other players need to check the shm to see what card has been played
 	 sem_wait(semMemCardsPile);
 	 //printf("contenu cardsPile %s\n", cardsPile);
-	 //readCardPile();
+	 readCardPile();
 	 sem_post(semMemCardsPile);
      break;
 	//HERE
@@ -202,8 +205,8 @@ void input (char * string, int length){
 
 int basicPlay(int index, char * message){
 	printf("basicPlay- index : %d\n", index);
-	
-	if(cardsPile == "" || cards[index] >= cartePrecedente){
+	// todo : boucler si la valeur est inférieure
+	if(cardsPile == "" || get_card_points(cards[index]) >= get_card_points(cartePrecedente)){
 		sprintf(message, "%i ",cards[index]);
      	printf("you selected : %s\n", get_card_name(cards[index])); 
 	 	fprintf(stdout,"Client - message envoyé au serveur : '%s'\n",message);
@@ -216,20 +219,23 @@ int basicPlay(int index, char * message){
 	return cards[index];
 }
 
-void readCardPile(){
+int readCardPile(){
 	char * cardsPile2;
 	cardsPile2 = malloc(200);
 	strcpy(cardsPile2,cardsPile);
    	char * token = strtok(cardsPile2, " ");
    	int i = 0;
 	if(token != NULL){
-		int previousCard = atoi(token);
+	if(cartePrecedente != -1){
+		printf("%s \n", get_card_name(atoi(token)));
+	}
+	cartePrecedente = atoi(token);
 	}
    	// loop through the string to extract all other tokens
-   	if( token != NULL ) {
-      printf("%s \n", get_card_name(atoi(token)));
-	  token = strtok(NULL, " "); 
-   	}
+/*   	while( token != NULL ) {*/
+/*      printf("%s \n", get_card_name(atoi(token)));*/
+/*	  token = strtok(NULL, " "); */
+/*   	}*/
 	
 }
 

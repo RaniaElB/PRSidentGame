@@ -60,8 +60,5 @@ char* get_card_name(int card) {
 }
 
 int get_card_points(int card) {
-	if (card > 47) {
-		return 1;
-	}
 	return (card / 4) + 2;
 }
