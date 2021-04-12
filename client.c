@@ -22,7 +22,7 @@ void sigusr_handler();
 void afficher_cartes();
 int decode_msg_payload(char** raw_payload, int* decoded_payload, int max_elements); 
 int basicPlay(int index,char * message);
-int readCardPile();
+void readCardPile();
 int cards[DECK_SIZE/2]; // todo : set la taille de cards un peu mieux
 int nbCards;
 char *myName;
@@ -219,7 +219,7 @@ int basicPlay(int index, char * message){
 	return cards[index];
 }
 
-int readCardPile(){
+void readCardPile(){
 	char * cardsPile2;
 	cardsPile2 = malloc(200);
 	strcpy(cardsPile2,cardsPile);
