@@ -14,6 +14,7 @@
 #define MESSAGE_SIZE 82
 #define PATH_PIPE "./fifo-serveur-"
 #define CHAR_BUFFER_LENGTH 100
+#define MAXPLAYERS 2
 
 void initMemoireLobby();
 void initMemoirePileCartes();
@@ -24,6 +25,7 @@ int decode_msg_payload(char** raw_payload, int* decoded_payload, int max_element
 int cards[DECK_SIZE/2]; // todo : set la taille de cards un peu mieux
 int nbCards;
 char *myName;
+struct player arrayPlayer[MAXPLAYERS]; 
 int playing ;
 int shmId; // shmId memLobby
 int shmIdCardsPile;
@@ -69,7 +71,10 @@ printf("my pid: %i\n",getpid());
 	sigwait(&set,&signal);
 /*	printf("sigwait ended\n");*/
 	if(signal){
-
+	
+	sem_wait(semMemLobby);
+	printf("players from lobby: %s\n", seg_ptg);
+	sem_post(semMemLobby);
 	
 int pid = getpid();
 
@@ -155,7 +160,7 @@ printf("ppc : %s\n", path_pipe_client);
 void initMemoireLobby(){
 	key_t cleSegment;
 	CHECK(cleSegment=ftok("/memLobby", 1), "fack, can't create key");
-	CHECK(shmId=shmget(cleSegment, 200 * sizeof(char), IPC_CREAT | SHM_R | SHM_W), "fack, can't create shm");
+	CHECK(shmId=shmget(cleSegment, 200 * sizeof(char), SHM_R | SHM_W), "fack, can't create shm");
 	struct shmid_ds shmid_stats;
    	shmctl(shmId, IPC_STAT, &shmid_stats);
 	printf("PID du créateur:%i\n", shmid_stats.shm_cpid); 
@@ -194,4 +199,19 @@ void input (char * string, int length){
 		string++;
 	*string = '\0'; 
 }
+
+void getPlayersFromLobby(){
+char[50] temp;
+strcpy(temp,seg_ptg);
+   char * token = strtok(message, " ");
+   int i = 0;
+   // loop through the string to extract all other tokens
+   while( token != NULL ) {
+      token = strtok(NULL, " ");
+   }
+
+}
+
+//todo : fstrtok players lobby to save players into var
+//split la pileCards, get_card_name sur le tableau pileCards obtenu
 

@@ -20,10 +20,11 @@ int rand_range(int upper_limit);
 void initMemoireLobby();
 void readMemoireLobby();
 void destroyMemoireLobby();
+void destroyMemoireCardsPile();
 void initMemoirePileCartes();
 void createPipe(char* message, int pid);
 bool array_contains(int* haystack, int needle, int length);
-void sigusr_handler();
+void sigint_handler();
 
 int shmId;
 int shmIdCardsPile;
@@ -35,6 +36,8 @@ struct player arrayPlayer[MAXPLAYERS];
 
 
 int main() {
+signal(SIGINT, sigint_handler);
+printf("my PID: %i\n", getpid());
 /*	printf("enter nb of players:\n");*/  //todo modify everywhere in order to make it dynamic
 /*	scanf("%i", &maxPlayers);*/
 	printf("%i players:\n", MAXPLAYERS);
@@ -56,13 +59,23 @@ int main() {
 	printf("Gave semaphore back, next check in 1 sec\n\n");
 	sleep(1);
 	} 
+	sem_wait(semMemLobby);
+	int i;
+		for (i = 0; i < nbJoueurs; i++){
+printf("joueur %i name: %s, pid:%i\n", i+1, arrayPlayer[i].name, arrayPlayer[i].pid);
+}
+	
+	for (i=0; i < nbJoueurs; i++){
+	char player[30];
+	sprintf(player, "%i:%s;", arrayPlayer[i].pid, arrayPlayer[i].name);
+	strcat(seg_ptg, player);
+	}
+	sem_post(semMemLobby);
 	printf("players : %i/%i, starting game.\n", nbJoueurs, MAXPLAYERS);
 	sem_unlink("memLobby");
-	destroyMemoireLobby();
 	//distribution des cartes dans des pipes
 	deal_cards();
 	//initialisation partie
-	int i;
 	int nbTours = 0;
 	//init memoire ptg
 	initMemoirePileCartes();
@@ -89,11 +102,8 @@ int main() {
 			kill(arrayPlayer[j].pid, SIGUSR2);}
 	}
 	sigset_t set;
-	struct sigaction usr1, usr2;
-	usr1.sa_handler= &sigusr_handler;
-	usr2.sa_handler= &sigusr_handler;
 	sigemptyset(&set);
-	sigaction(SIGUSR1,&usr1,NULL);
+	signal(SIGUSR1, SIG_IGN);
 /*	sigaction(SIGUSR2,&usr2,NULL);*/
 	sigaddset(&set, SIGUSR1);
 	int signal;
@@ -110,14 +120,14 @@ int main() {
 	}
 	nbTours++;
 	}
-	
+		destroyMemoireLobby(); //todo : place somewhere else
     return EXIT_SUCCESS;
 }
 
 void initMemoireLobby(){
 	key_t cleSegment;
 	CHECK(cleSegment=ftok("/memLobby", 1), "fack, can't create key");
-	CHECK(shmId=shmget(cleSegment, 200 * sizeof(char), IPC_CREAT | SHM_R | SHM_W), "fack, can't create shm");
+	CHECK(shmId=shmget(cleSegment, 200 * sizeof(char), IPC_CREAT | IPC_EXCL | SHM_R | SHM_W), "fack, can't create shm");
 	printf("shm ID : %i \n", shmId);
 	seg_ptg = (char*) shmat(shmId, NULL, 0);
 }
@@ -153,7 +163,7 @@ strcpy(seg_ptg, "\0");
 void initMemoirePileCartes(){
 	key_t cleSegment;
 	CHECK(cleSegment=ftok("/memCardsPile", 1), "fack, can't create key");
-	CHECK(shmIdCardsPile=shmget(cleSegment, 200 * sizeof(char), IPC_CREAT | SHM_R | SHM_W), "fack, can't create shm");
+	CHECK(shmIdCardsPile=shmget(cleSegment, 200 * sizeof(char), IPC_CREAT | IPC_EXCL | SHM_R | SHM_W), "fack, can't create shm");
 	printf("shm ID : %i \n", shmIdCardsPile);
 	cardsPile = (char*) shmat(shmId, NULL, 0);
 }
@@ -196,6 +206,10 @@ void destroyMemoireLobby(){
 	CHECK(shmdt(seg_ptg), "cannot detach from the segment");
 }
 
+void destroyMemoireCardsPile(){
+	CHECK(shmctl(shmIdCardsPile, IPC_RMID, NULL), "cannot delete the content of the segment");
+	CHECK(shmdt(cardsPile), "cannot detach from the segment");
+}
 
 void deal_cards() {
 	int cards_per_player = DECK_SIZE / nbJoueurs;
@@ -235,10 +249,20 @@ bool array_contains(int* haystack, int needle, int length) {
 	return false;
 }
 
-void sigusr_handler(int sig, siginfo_t *si, void* arg)
+
+void sigint_handler(int sig, siginfo_t *si, void* arg)
 {
-	//rien à mettre dedans???
+int i;
+	for (i = 0; i < nbJoueurs; i++){
+	kill(arrayPlayer[i].pid, SIGINT);
+	printf("sending SIGINT to PID:%i\n", arrayPlayer[i].pid);
+	}
+	printf("destroying shared memory lobby\n");
+	destroyMemoireLobby();
+	destroyMemoireCardsPile();
+exit(0);
 }
+
 
 int rand_range(int upper_limit) {
 	return (int) (( (double) upper_limit / RAND_MAX) * rand());
