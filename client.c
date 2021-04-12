@@ -78,7 +78,7 @@ snprintf(path_pipe_client, sizeof(PATH_PIPE)+sizeof(pid), "%s%i", PATH_PIPE, pid
 printf("ppc : %s\n", path_pipe_client);
 
 		CHECK(
-            descripteur_pipe_lecture = open(path_pipe_client,O_RDONLY),
+            descripteur_pipe_lecture = open(path_pipe_client,O_RDONLY | O_NONBLOCK),
             "Impossible d'ouvrir le tube nommé.\n"
     	);
 		char message[CHAR_BUFFER_LENGTH] = ""; 
@@ -100,6 +100,7 @@ printf("ppc : %s\n", path_pipe_client);
    sigaddset(&set, SIGUSR2);
    playing = 1 ;
    int nbTours = 0;
+   int descripteur_pipe_ecriture = 0;
    while(playing){
    sigwait(&set,&signal);
 	sem_t *semMemCardsPile;
@@ -113,9 +114,11 @@ printf("ppc : %s\n", path_pipe_client);
 	}
 	cardsPile = shmat(shmIdCardsPile, NULL, 0);
 	}
-   system("clear");
+	printf("shmIDcardsPile %d\n", shmIdCardsPile);
+	printf("contenu cardsPile %s\n", cardsPile);
+    system("clear");
      printf("==== %s ====\n", myName);
-   switch(signal){
+    switch(signal){
    case SIGUSR1: 
  
      printf("I must start playing!!!\n");
@@ -124,18 +127,21 @@ printf("ppc : %s\n", path_pipe_client);
      printf("please enter the index of the card you want to play :\n"); 
      scanf("%i",&index);
      sem_wait(semMemCardsPile);
-     
+	 sprintf(message, "%i ",cards[index]);
+	 //message[strlen(message)-1]='\0';
+     //close(descripteur_pipe_ecriture);
      printf("you selected : %s\n", get_card_name(cards[index])); //todo : ecrire dans shm
-     char bufferPile[20]; //todo : modifier size car arbitraire
-/*     sprintf(bufferPile, "%i",cards[index]);*/ //todo BUG ICI/////////
-/*	strcat(cardsPile, bufferPile);*/ //todo BUG ICI////////
+	 fprintf(stdout,"Client - message envoyé au serveur : '%s'\n",message);
+	strcat(cardsPile, message); //todo BUG ICI////////
 	sem_post(semMemCardsPile);
      
      printf("to server : kill(%i, SIGUSR1);\n", pidServer);
      kill(pidServer, SIGUSR1);
      break;
      case SIGUSR2: //other players need to check the shm to see what card has been played
-     printf("I must check the pile!!!\n");
+	 sem_wait(semMemCardsPile);
+	 printf("contenu cardsPile %s\n", cardsPile);
+	 sem_post(semMemCardsPile);
      break;
 	//HERE
 	}

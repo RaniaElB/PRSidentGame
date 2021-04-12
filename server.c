@@ -74,6 +74,8 @@ int main() {
 		perror("can not open semMemCardsPile");
 		exit(-1);
 	}
+	//ouverture tubes message du client
+	
 	// debut partie
 	while(1){
 	for (i=0; i < nbJoueurs; i++){ //while ???? là on n'a que N tours de jeu
@@ -100,6 +102,9 @@ int main() {
 	printf("%s played!! \n", arrayPlayer[i].name);
 	sem_wait(semMemCardsPile);
 	printf("pile de cartes :%s\n", cardsPile);
+	printf("shmIDcardsPile %d\n", shmIdCardsPile);
+	//read memoire CardPile
+	
 	sem_post(semMemCardsPile);
 	
 	}
