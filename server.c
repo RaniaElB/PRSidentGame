@@ -35,8 +35,6 @@ struct player arrayPlayer[MAXPLAYERS];
 
 
 int main() {
-/*	printf("enter nb of players:\n");*/  //todo modify everywhere in order to make it dynamic
-/*	scanf("%i", &maxPlayers);*/
 	printf("%i players:\n", MAXPLAYERS);
 	initMemoireLobby();
 	sem_t *semMemLobby;
@@ -74,7 +72,6 @@ int main() {
 		perror("can not open semMemCardsPile");
 		exit(-1);
 	}
-	//ouverture tubes message du client
 	
 	// debut partie
 	while(1){
@@ -103,10 +100,7 @@ int main() {
 	sem_wait(semMemCardsPile);
 	printf("pile de cartes :%s\n", cardsPile);
 	printf("shmIDcardsPile %d\n", shmIdCardsPile);
-	//read memoire CardPile
-	
 	sem_post(semMemCardsPile);
-	
 	}
 	nbTours++;
 	}

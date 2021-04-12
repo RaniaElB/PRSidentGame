@@ -21,13 +21,17 @@ void input();
 void sigusr_handler();
 void afficher_cartes();
 int decode_msg_payload(char** raw_payload, int* decoded_payload, int max_elements); 
+int basicPlay(int index,char * message);
+void readCardPile();
 int cards[DECK_SIZE/2]; // todo : set la taille de cards un peu mieux
 int nbCards;
 char *myName;
+char * cardsPile;
 int playing ;
 int shmId; // shmId memLobby
 int shmIdCardsPile;
 int pidServer;
+int cartePrecedente = -1;
 int main(int argc,char * argv[]) 
 {
 printf("my pid: %i\n",getpid());
@@ -104,7 +108,7 @@ printf("ppc : %s\n", path_pipe_client);
    while(playing){
    sigwait(&set,&signal);
 	sem_t *semMemCardsPile;
-	char * cardsPile;
+	
     if(nbTours == 0){
    	initMemoirePileCartes();
 	if((semMemCardsPile= sem_open("/memCardsPile", O_CREAT, S_IRWXU, 1)) == SEM_FAILED)
@@ -127,20 +131,21 @@ printf("ppc : %s\n", path_pipe_client);
      printf("please enter the index of the card you want to play :\n"); 
      scanf("%i",&index);
      sem_wait(semMemCardsPile);
-	 sprintf(message, "%i ",cards[index]);
-	 //message[strlen(message)-1]='\0';
-     //close(descripteur_pipe_ecriture);
-     printf("you selected : %s\n", get_card_name(cards[index])); //todo : ecrire dans shm
-	 fprintf(stdout,"Client - message envoyé au serveur : '%s'\n",message);
-	strcat(cardsPile, message); //todo BUG ICI////////
-	sem_post(semMemCardsPile);
+	 //TO DO FONCTION DE JEU
+	 int cardPlayed = 0;
+	 
+	 cardPlayed = basicPlay(index, cardsPile);
+	  
+	 sem_post(semMemCardsPile);
      
      printf("to server : kill(%i, SIGUSR1);\n", pidServer);
      kill(pidServer, SIGUSR1);
      break;
+
      case SIGUSR2: //other players need to check the shm to see what card has been played
 	 sem_wait(semMemCardsPile);
-	 printf("contenu cardsPile %s\n", cardsPile);
+	 //printf("contenu cardsPile %s\n", cardsPile);
+	 //readCardPile();
 	 sem_post(semMemCardsPile);
      break;
 	//HERE
@@ -193,5 +198,38 @@ void input (char * string, int length){
 	while (*string != '\n')
 		string++;
 	*string = '\0'; 
+}
+
+int basicPlay(int index, char * message){
+	printf("basicPlay- index : %d\n", index);
+	
+	if(cardsPile == "" || cards[index] >= cartePrecedente){
+		sprintf(message, "%i ",cards[index]);
+     	printf("you selected : %s\n", get_card_name(cards[index])); 
+	 	fprintf(stdout,"Client - message envoyé au serveur : '%s'\n",message);
+		strcat(cardsPile, message);
+		removeCard(index);
+		nbCards--;
+	}else{
+		printf("Enter the index of a higher value card\n");
+	}
+	return cards[index];
+}
+
+void readCardPile(){
+	char * cardsPile2;
+	cardsPile2 = malloc(200);
+	strcpy(cardsPile2,cardsPile);
+   	char * token = strtok(cardsPile2, " ");
+   	int i = 0;
+	if(token != NULL){
+		int previousCard = atoi(token);
+	}
+   	// loop through the string to extract all other tokens
+   	if( token != NULL ) {
+      printf("%s \n", get_card_name(atoi(token)));
+	  token = strtok(NULL, " "); 
+   	}
+	
 }
 
