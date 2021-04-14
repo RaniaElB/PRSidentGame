@@ -30,6 +30,8 @@ int playing ;
 int shmId; // shmId memLobby
 int shmIdCardsPile;
 int pidServer;
+char * seg_ptg;
+
 int main(int argc,char * argv[]) 
 {
 printf("my pid: %i\n",getpid());
@@ -48,7 +50,6 @@ printf("my pid: %i\n",getpid());
 	printf("Waiting for sem...\n");
 	sem_wait(semMemLobby);
 	printf("semaphore available ! writing in shm...\n");
-	char * seg_ptg;
 	seg_ptg = shmat(shmId, NULL, 0);
 	strcat(seg_ptg, myName);
 	printf("text from shared memory : \n%s\n", seg_ptg);
@@ -201,9 +202,9 @@ void input (char * string, int length){
 }
 
 void getPlayersFromLobby(){
-char[50] temp;
+char temp[50];
 strcpy(temp,seg_ptg);
-   char * token = strtok(message, " ");
+   char * token = strtok(temp, " ");
    int i = 0;
    // loop through the string to extract all other tokens
    while( token != NULL ) {
