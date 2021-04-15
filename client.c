@@ -119,20 +119,20 @@ printf("ppc : %s\n", path_pipe_client);
 	}
 	cardsPile = shmat(shmIdCardsPile, NULL, 0);
 	}
-	printf("shmIDcardsPile %d\n", shmIdCardsPile);
-	printf("contenu cardsPile %s\n", cardsPile);
+/*	printf("shmIDcardsPile %d\n", shmIdCardsPile);*/
+/*	printf("contenu cardsPile %s\n", cardsPile);*/
     system("clear");
      printf("==== %s ====\n", myName);
     switch(signal){
    case SIGUSR1: 
      sem_wait(semMemCardsPile);
 	 printf("contenu cardsPile %s\n", cardsPile);
+	 readCardPile();
 	 if(maDerniereCarte == cartePrecedente){
-		 printf("j'essaie de vider la pile");
+		printf("Plus personne ne peut jouer au dessus\n\n");
 		cartePrecedente = -1;
 		strcpy(cardsPile,"");
 	 }
-	 readCardPile();
 	 sem_post(semMemCardsPile);
      printf("I must start playing!!!\n");
      afficher_cartes();
@@ -168,7 +168,7 @@ printf("ppc : %s\n", path_pipe_client);
 }
 void initMemoireLobby(){
 	key_t cleSegment;
-	CHECK(cleSegment=ftok("/memLobby", 1), "fack, can't create key");
+	CHECK(cleSegment=ftok("/memLobby", 1), "error, can't create key");
 	CHECK(shmId=shmget(cleSegment, 200 * sizeof(char), IPC_CREAT | SHM_R | SHM_W), "fack, can't create shm");
 	struct shmid_ds shmid_stats;
    	shmctl(shmId, IPC_STAT, &shmid_stats);
@@ -180,8 +180,8 @@ void initMemoireLobby(){
 
 void initMemoirePileCartes(){
 	key_t cleSegment;
-	CHECK(cleSegment=ftok("/memCardsPile", 1), "fack, can't create key");
-	CHECK(shmIdCardsPile=shmget(cleSegment, 200 * sizeof(char), IPC_CREAT | SHM_R | SHM_W), "fack, can't create shm");
+	CHECK(cleSegment=ftok("/memCardsPile", 1), "error, can't create key");
+	CHECK(shmIdCardsPile=shmget(cleSegment, 200 * sizeof(char), IPC_CREAT | SHM_R | SHM_W), "error, can't create shm");
 }
 
 
@@ -209,7 +209,7 @@ bool basicPlay(int index, char * message){
 	printf("basicPlay- index : %d\n", index);
 	maDerniereCarte = cards[index];
 	
-	if(cardsPile == "" || get_card_points(cards[index]) >= get_card_points(cartePrecedente)){
+	if(cardsPile == "" || get_card_points(cards[index]) > get_card_points(cartePrecedente)){
 		sprintf(message, "%i ",cards[index]);
      	printf("you selected : %s\n", get_card_name(cards[index])); 
 	 	fprintf(stdout,"Client - message envoyé au serveur : '%s'\n",message);
@@ -233,15 +233,7 @@ void readCardPile(){
    	int i = 0;
 	if(token != NULL){
 	cartePrecedente = atoi(token);
-	if(cartePrecedente != -1){
-		printf("%s \n", get_card_name(atoi(token)));
+	printf("%s \n", get_card_name(cartePrecedente));
 	}
-
-	}
-   	// loop through the string to extract all other tokens
-/*   	while( token != NULL ) {*/
-/*      printf("%s \n", get_card_name(atoi(token)));*/
-/*	  token = strtok(NULL, " "); */
-/*   	}*/
 }
 void sig_handler_empty(){}
