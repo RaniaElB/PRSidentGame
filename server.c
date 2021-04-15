@@ -15,30 +15,38 @@
 #define DEAL		4
 #define PATH_PIPE "./fifo-serveur-"
 #define CHAR_BUFFER_LENGTH 100
-int rand_range(int upper_limit);
 
+////functions prototypes
+//shared memory
 void initMemoireLobby();
 void readMemoireLobby();
 void destroyMemoireLobby();
+
 void initMemoirePileCartes();
 void destroyMemoireCardsPile();
+//pipe function
 void createPipe(char* message, int pid);
+//utils functions
 bool array_contains(int* haystack, int needle, int length);
+int rand_range(int upper_limit);
+//signal handling callback functions
 void sigint_handler();
 void sig_handler_empty();
+////
 
 int shmId;
-int shmIdCardsPile;
-int maxPlayers;
-char * seg_ptg;
-char * cardsPile;
-int nbJoueurs;
-struct player arrayPlayer[MAXPLAYERS]; 
+char * seg_ptg; 
 
+int shmIdCardsPile;
+char * cardsPile;
+
+int nbJoueurs;
+struct player arrayPlayer[MAXPLAYERS];
 
 int main() {
 	signal(SIGINT, sigint_handler);
-	printf("%i players:\n", MAXPLAYERS);
+	printf("starting a %i players game:\n", MAXPLAYERS);
+	//setting semaphore and shared memory for lobby
 	initMemoireLobby();
 	sem_t *semMemLobby;
 	sem_unlink("/memLobby");
@@ -47,14 +55,15 @@ int main() {
 		perror("can not open semMemLobby");
 		exit(-1);
 	}
+	
 	nbJoueurs = 0;
+	//looking for players in the lobby 
 	while ( nbJoueurs < MAXPLAYERS ){
 	printf("Players : %i/%i\n", nbJoueurs, MAXPLAYERS);
-	printf("Waiting for semaphore...\n");
+	system("clear");
 	sem_wait(semMemLobby);
 	readMemoireLobby();
 	sem_post(semMemLobby);
-	printf("Gave semaphore back, next check in 1 sec\n\n");
 	sleep(1);
 	} 
 	printf("players : %i/%i, starting game.\n", nbJoueurs, MAXPLAYERS);
@@ -109,6 +118,9 @@ int main() {
     return EXIT_SUCCESS;
 }
 
+
+//// shared memory functions
+ 
 void initMemoireLobby(){
 	key_t cleSegment;
 	CHECK(cleSegment=ftok("/memLobby", 1), "fack, can't create key");
@@ -141,8 +153,10 @@ for (i = 0; i < nbJoueurs; i++){
 printf("joueur %lu name: %s, pid:%i\n", i+1, arrayPlayer[i].name, arrayPlayer[i].pid);
 }
 strcpy(seg_ptg, "\0");
-
-
+}
+void destroyMemoireLobby(){
+	CHECK(shmctl(shmId, IPC_RMID, NULL), "cannot delete the content of the segment");
+	CHECK(shmdt(seg_ptg), "cannot detach from the segment");
 }
 
 void initMemoirePileCartes(){
@@ -152,6 +166,12 @@ void initMemoirePileCartes(){
 	printf("shm ID : %i \n", shmIdCardsPile);
 	cardsPile = (char*) shmat(shmId, NULL, 0);
 }
+void destroyMemoireCardsPile(){
+	CHECK(shmctl(shmIdCardsPile, IPC_RMID, NULL), "cannot delete the content of the segment");
+	CHECK(shmdt(cardsPile), "cannot detach from the segment");
+}
+
+////pipe function
 void createPipe(char* message, int pid){
 int descripteur_pipe_ecriture = 0;
 char path_pipe_client[28];
@@ -186,15 +206,7 @@ printf("ppc : %s\n", path_pipe_client);
     		fprintf(stdout,"Serveur - fichier '%s' supprimé.\n",path_pipe_client);
 }
 
-void destroyMemoireLobby(){
-	CHECK(shmctl(shmId, IPC_RMID, NULL), "cannot delete the content of the segment");
-	CHECK(shmdt(seg_ptg), "cannot detach from the segment");
-}
-
-void destroyMemoireCardsPile(){
-	CHECK(shmctl(shmIdCardsPile, IPC_RMID, NULL), "cannot delete the content of the segment");
-	CHECK(shmdt(cardsPile), "cannot detach from the segment");
-}
+//// game functions
 
 void deal_cards() {
 	int cards_per_player = DECK_SIZE / nbJoueurs;
@@ -224,6 +236,8 @@ void deal_cards() {
 	}
 }
 
+//// utils functions
+
 bool array_contains(int* haystack, int needle, int length) {
 	int* array_ptr = haystack;
 	for (; (array_ptr - haystack) < length; array_ptr++) {
@@ -233,6 +247,12 @@ bool array_contains(int* haystack, int needle, int length) {
 	}
 	return false;
 }
+
+int rand_range(int upper_limit) {
+	return (int) (( (double) upper_limit / RAND_MAX) * rand());
+}
+
+////signal handling callback functions
 
 void sigint_handler(int sig, siginfo_t *si, void* arg)
 {
@@ -249,7 +269,5 @@ void sigint_handler(int sig, siginfo_t *si, void* arg)
 
 void sig_handler_empty(){}
 
-int rand_range(int upper_limit) {
-	return (int) (( (double) upper_limit / RAND_MAX) * rand());
-}
+
 
