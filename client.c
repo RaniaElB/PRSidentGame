@@ -14,6 +14,7 @@
 #define MESSAGE_SIZE 82
 #define PATH_PIPE "./fifo-serveur-"
 #define CHAR_BUFFER_LENGTH 100
+#define MAXPLAYERS 2 //todo modify everywhere in order to make it dynamic
 
 void initMemoireLobby();
 void initMemoirePileCartes();
@@ -27,6 +28,7 @@ int cards[DECK_SIZE/2]; // todo : set la taille de cards un peu mieux
 int nbCards;
 char *myName;
 char * cardsPile;
+char * players[MAXPLAYERS];
 int playing ;
 int shmId; // shmId memLobby
 int shmIdCardsPile;
@@ -60,13 +62,10 @@ printf("my pid: %i\n",getpid());
 	int descripteur_pipe_lecture = 0;
 
 	fprintf(stdout,"PID du processus : %d\n",getpid());
+	signal(SIGUSR1,SIG_IGN);
+	signal(SIGUSR2,SIG_IGN);
 	sigset_t set;
-	struct sigaction usr1, usr2;
-	usr1.sa_handler= &sigusr_handler;
-	usr2.sa_handler= &sigusr_handler;
 	sigemptyset(&set);
-	sigaction(SIGUSR1,&usr1,NULL);
-	sigaction(SIGUSR2,&usr2,NULL);
 	sigaddset(&set, SIGUSR1);
 	int signal;
 /*	printf("waiting for signal SIGUSR1\n");*/
