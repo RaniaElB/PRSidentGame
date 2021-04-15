@@ -44,10 +44,12 @@ int nbJoueurs;
 struct player arrayPlayer[MAXPLAYERS];
 
 int main() {
+	//printf("Pid serveur %d\n", getpid());
 	signal(SIGINT, sigint_handler);
 	printf("starting a %i players game:\n", MAXPLAYERS);
 	//setting semaphore and shared memory for lobby
 	initMemoireLobby();
+	//destroyMemoireLobby();
 	sem_t *semMemLobby;
 	sem_unlink("/memLobby");
 	if((semMemLobby= sem_open("/memLobby", O_CREAT | O_EXCL, S_IRWXU, 1)) == SEM_FAILED)
@@ -84,7 +86,7 @@ int main() {
 		perror("can not open semMemCardsPile");
 		exit(-1);
 	}
-	
+	printf("Pid serveur %d\n", getpid());
 	// debut partie
 	while(1){
 	for (i=0; i < nbJoueurs; i++){ //while ???? là on n'a que N tours de jeu
@@ -94,7 +96,7 @@ int main() {
 		if (i == j){
 			kill(arrayPlayer[j].pid, SIGUSR1);
 		}
-		else if (!(nbTours == 0 && i == 0)) {
+		else  {
 			kill(arrayPlayer[j].pid, SIGUSR2);}
 	}
 	sigset_t set;
