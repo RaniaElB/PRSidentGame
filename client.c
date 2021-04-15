@@ -19,7 +19,7 @@
 void initMemoireLobby();
 void initMemoirePileCartes();
 void input();
-void sigusr_handler();
+void sig_handler_empty();
 void afficher_cartes();
 int decode_msg_payload(char** raw_payload, int* decoded_payload, int max_elements); 
 int basicPlay(int index,char * message);
@@ -62,15 +62,15 @@ printf("my pid: %i\n",getpid());
 	int descripteur_pipe_lecture = 0;
 
 	fprintf(stdout,"PID du processus : %d\n",getpid());
-	signal(SIGUSR1,SIG_IGN);
-	signal(SIGUSR2,SIG_IGN);
+	signal(SIGUSR1,sig_handler_empty);
+	signal(SIGUSR2,sig_handler_empty);
 	sigset_t set;
 	sigemptyset(&set);
 	sigaddset(&set, SIGUSR1);
 	int signal;
-/*	printf("waiting for signal SIGUSR1\n");*/
+	printf("waiting for signal SIGUSR1\n");
 	sigwait(&set,&signal);
-/*	printf("sigwait ended\n");*/
+	printf("sigwait ended\n");
 	if(signal){
 
 	
@@ -177,11 +177,6 @@ void initMemoirePileCartes(){
 	CHECK(shmIdCardsPile=shmget(cleSegment, 200 * sizeof(char), IPC_CREAT | SHM_R | SHM_W), "fack, can't create shm");
 }
 
-void sigusr_handler(int sig, siginfo_t *si, void* arg)
-{
-//rien à mettre dedans???
-}
-
 
 void afficher_cartes(){
 int i;
@@ -219,7 +214,7 @@ int basicPlay(int index, char * message){
 }
 
 void readCardPile(){
-	char * cardsPile2; // do we really need this, since strtok still deletes the shm?
+	char * cardsPile2; 
 	cardsPile2 = malloc(200); 
 	strcpy(cardsPile2,cardsPile);
    	char * token = strtok(cardsPile2, " ");
@@ -237,4 +232,4 @@ void readCardPile(){
 /*   	}*/
 	
 }
-
+void sig_handler_empty(){}

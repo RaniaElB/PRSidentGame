@@ -25,6 +25,7 @@ void destroyMemoireCardsPile();
 void createPipe(char* message, int pid);
 bool array_contains(int* haystack, int needle, int length);
 void sigint_handler();
+void sig_handler_empty();
 
 int shmId;
 int shmIdCardsPile;
@@ -90,8 +91,8 @@ int main() {
 	sigset_t set;
 	
 	sigemptyset(&set);
-	signal(SIGUSR1,SIG_IGN);
-/*	signal(SIGUSR2,SIG_IGN);*/
+	signal(SIGUSR1,sig_handler_empty);
+/*	signal(SIGUSR2,sig_handler_empty);*/
 	sigaddset(&set, SIGUSR1);
 	int signal;
 	printf("waiting for %s to play... \n", arrayPlayer[i].name);
@@ -245,6 +246,8 @@ void sigint_handler(int sig, siginfo_t *si, void* arg)
 		destroyMemoireCardsPile();
 		exit(0);
 }
+
+void sig_handler_empty(){}
 
 int rand_range(int upper_limit) {
 	return (int) (( (double) upper_limit / RAND_MAX) * rand());
