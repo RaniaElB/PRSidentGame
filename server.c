@@ -49,7 +49,7 @@ int main() {
 	printf("starting a %i players game:\n", MAXPLAYERS);
 	//setting semaphore and shared memory for lobby
 	initMemoireLobby();
-	//destroyMemoireLobby();
+/*	destroyMemoireLobby();*/
 	sem_t *semMemLobby;
 	sem_unlink("/memLobby");
 	if((semMemLobby= sem_open("/memLobby", O_CREAT | O_EXCL, S_IRWXU, 1)) == SEM_FAILED)
@@ -103,11 +103,16 @@ int main() {
 	
 	sigemptyset(&set);
 	signal(SIGUSR1,sig_handler_empty);
-/*	signal(SIGUSR2,sig_handler_empty);*/
+	signal(SIGUSR2,sig_handler_empty);
 	sigaddset(&set, SIGUSR1);
+	sigaddset(&set, SIGUSR2);
 	int signal;
 	printf("waiting for %s to play... \n", arrayPlayer[i].name);
    	sigwait(&set,&signal);
+   	if (signal == SIGUSR2){
+   	printf("%s a gagné!!!!\n", arrayPlayer[i].name);
+   	sigint_handler();
+   	}
 	printf("%s played!! \n", arrayPlayer[i].name);
 	sem_wait(semMemCardsPile);
 	printf("pile de cartes :%s\n", cardsPile);
@@ -258,7 +263,6 @@ int rand_range(int upper_limit) {
 
 void sigint_handler(int sig, siginfo_t *si, void* arg)
 {
-	printf("received sigint\n");
 	int i;
 	for (i=0; i < nbJoueurs; i++){
 	printf("sending sigint to pid : %i\n", arrayPlayer[i].pid);
@@ -270,6 +274,7 @@ void sigint_handler(int sig, siginfo_t *si, void* arg)
 }
 
 void sig_handler_empty(){}
+
 
 
 
