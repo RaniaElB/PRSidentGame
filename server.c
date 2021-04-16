@@ -138,26 +138,31 @@ void initMemoireLobby(){
 
 void readMemoireLobby()
 {
+/*strcpy(seg_ptg, "\0");*/
+int nbJoueursLobby;
 printf("seg : %s\n", seg_ptg);
+char * playersRaw[MAXPLAYERS]; 
 char *tokenAll = strtok(seg_ptg,";");
 while (tokenAll != NULL) {
-	struct player player_i;
-	char *tokenName = strtok(tokenAll,":"); //todo modify in order to handle multiple players to be added at the same time
-	//because strtok modifies initial string
-	int tokenPID =  atoi(strtok(NULL, ";"));
-	player_i.name = malloc(sizeof(char)*10);
-	strcpy(player_i.name, tokenName);
-	strcat(player_i.name, "\0");
-	player_i.pid =  tokenPID;
-	printf("joueur %i, name:%s, pid:%i\n", nbJoueurs+1, player_i.name, player_i.pid );
+	printf("token All : %s\n", tokenAll);
+	playersRaw[nbJoueursLobby] = tokenAll;
 	tokenAll = strtok(NULL, ";");
-	arrayPlayer[nbJoueurs] = player_i;
-	nbJoueurs++;
-}
+	nbJoueursLobby++;
+	}
+	int i;
+	struct player player_i;
+	for (i =0; i < nbJoueursLobby; i++)
+	{
+	printf("%s\n", playersRaw[i]);
+	player_i.name = malloc(sizeof(char)*10);
+		strcpy(player_i.name,strtok(playersRaw[i], ":")); 
+		player_i.pid=atoi(strtok(NULL, ":"));
+		arrayPlayer[nbJoueurs] = player_i;
+		nbJoueurs++;		
+	}
 printf("Current players in the lobby:\n");
-size_t i;
 for (i = 0; i < nbJoueurs; i++){
-printf("joueur %lu name: %s, pid:%i\n", i+1, arrayPlayer[i].name, arrayPlayer[i].pid);
+printf("joueur %i name: %s, pid:%i\n", i+1, arrayPlayer[i].name, arrayPlayer[i].pid);
 }
 strcpy(seg_ptg, "\0");
 }
