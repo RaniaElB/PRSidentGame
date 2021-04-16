@@ -290,7 +290,7 @@ int rand_range(int upper_limit) {
  * Description : permet de dérouter le signal de fin de partie, detruire les
  * mémoires partagées et quitter le programme
  */
-void sigint_handler(int sig, siginfo_t *si, void* arg)
+void sigint_handler()
 {
 	int i;
 	for (i=0; i < nbJoueurs; i++){

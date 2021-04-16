@@ -238,7 +238,7 @@ bool basicPlay(int index){
 			removeCard(index);
 			nbCards--;
 		}else{
-			printf("Enter the index of a higher value card\n");
+			printf("Enter the index of a higher value card or 100 to skip\n");
 			return false;
 		}
 	}
