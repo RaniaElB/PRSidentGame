@@ -71,7 +71,7 @@ int main(int argc,char * argv[])
 	
     		if(nbTours == 0){
    				initMemoirePileCartes();
-				if((semMemCardsPile= sem_open("/memCardsPile", O_CREAT, S_IRWXU, 1)) == SEM_FAILED)
+				if((semMemCardsPile= sem_open("memCardsPile", O_CREAT, S_IRWXU, 1)) == SEM_FAILED)
 				{	
 					perror("can not open semMemCardsPile");
 					exit(-1);
@@ -136,7 +136,7 @@ int main(int argc,char * argv[])
  */
 void initMemoireLobby(){
 	key_t cleSegment;
-	CHECK(cleSegment=ftok("/memLobby", 1), "error, can't create key");
+	CHECK(cleSegment=ftok("memLobby", 1), "error, can't create key");
 	CHECK(shmId=shmget(cleSegment, 200 * sizeof(char), IPC_CREAT | SHM_R | SHM_W), "fack, can't create shm");
 	struct shmid_ds shmid_stats;
    	shmctl(shmId, IPC_STAT, &shmid_stats);
@@ -151,7 +151,7 @@ void initMemoireLobby(){
  */
 void inscriptionJoueur(){
 	sem_t *semMemLobby;
-	if((semMemLobby= sem_open("/memLobby", O_CREAT, S_IRWXU, 1)) == SEM_FAILED)
+	if((semMemLobby= sem_open("memLobby", O_CREAT, S_IRWXU, 1)) == SEM_FAILED)
 	{	
 		perror("can not open semMemLobby");
 		exit(-1);
@@ -181,7 +181,7 @@ void inscriptionJoueur(){
  */
 void initMemoirePileCartes(){
 	key_t cleSegment;
-	CHECK(cleSegment=ftok("/memCardsPile", 1), "error, can't create key");
+	CHECK(cleSegment=ftok("memCardsPile", 1), "error, can't create key");
 	CHECK(shmIdCardsPile=shmget(cleSegment, 200 * sizeof(char), IPC_CREAT | SHM_R | SHM_W), "error, can't create shm");
 }
 

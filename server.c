@@ -19,8 +19,8 @@ int main() {
 	initMemoireLobby();
 	/*	destroyMemoireLobby();*/
 	sem_t *semMemLobby;
-	sem_unlink("/memLobby");
-	if((semMemLobby= sem_open("/memLobby", O_CREAT | O_EXCL, S_IRWXU, 1)) == SEM_FAILED)
+	sem_unlink("memLobby");
+	if((semMemLobby= sem_open("memLobby", O_CREAT | O_EXCL, S_IRWXU, 1)) == SEM_FAILED)
 	{	
 		perror("can not open semMemLobby");
 		exit(-1);
@@ -42,8 +42,8 @@ int main() {
 	initMemoirePileCartes();
 	//init semaphore
 	sem_t *semMemCardsPile;
-	sem_unlink("/memCardsPile");
-	if((semMemCardsPile= sem_open("/memCardsPile", O_CREAT | O_EXCL, S_IRWXU, 1)) == SEM_FAILED)
+	sem_unlink("memCardsPile");
+	if((semMemCardsPile= sem_open("memCardsPile", O_CREAT | O_EXCL, S_IRWXU, 1)) == SEM_FAILED)
 	{	
 		perror("can not open semMemCardsPile");
 		exit(-1);
@@ -97,8 +97,9 @@ int main() {
  * Description : permet d'initialiser la mémoire partagée du lobby
  */
 void initMemoireLobby(){
+	fopen("memLobby", "w+");
 	key_t cleSegment;
-	CHECK(cleSegment=ftok("/memLobby", 1), "fack, can't create key");
+	CHECK(cleSegment=ftok("memLobby", 1), "fack, can't create key");
 	CHECK(shmId=shmget(cleSegment, 200 * sizeof(char), IPC_CREAT | SHM_R | SHM_W), "fack, can't create shm");
 	printf("shm ID : %i \n", shmId);
 	seg_ptg = (char*) shmat(shmId, NULL, 0);
@@ -153,8 +154,9 @@ void destroyMemoireLobby(){
  * Description : permet d'initialiser la mémoire partagée de la pile de carte côté serveur
  */
 void initMemoirePileCartes(){
+	fopen("memCardsPile", "w+");
 	key_t cleSegment;
-	CHECK(cleSegment=ftok("/memCardsPile", 1), "fack, can't create key");
+	CHECK(cleSegment=ftok("memCardsPile", 1), "fack, can't create key");
 	CHECK(shmIdCardsPile=shmget(cleSegment, 200 * sizeof(char), IPC_CREAT | SHM_R | SHM_W), "fack, can't create shm");
 	printf("shm ID : %i \n", shmIdCardsPile);
 	cardsPile = (char*) shmat(shmId, NULL, 0);
