@@ -49,7 +49,7 @@ int main() {
 	printf("starting a %i players game:\n", MAXPLAYERS);
 	//setting semaphore and shared memory for lobby
 	initMemoireLobby();
-	//destroyMemoireLobby();
+/*	destroyMemoireLobby();*/
 	sem_t *semMemLobby;
 	sem_unlink("/memLobby");
 	if((semMemLobby= sem_open("/memLobby", O_CREAT | O_EXCL, S_IRWXU, 1)) == SEM_FAILED)
@@ -103,11 +103,16 @@ int main() {
 	
 	sigemptyset(&set);
 	signal(SIGUSR1,sig_handler_empty);
-/*	signal(SIGUSR2,sig_handler_empty);*/
+	signal(SIGUSR2,sig_handler_empty);
 	sigaddset(&set, SIGUSR1);
+	sigaddset(&set, SIGUSR2);
 	int signal;
 	printf("waiting for %s to play... \n", arrayPlayer[i].name);
    	sigwait(&set,&signal);
+   	if (signal == SIGUSR2){
+   	printf("%s a gagné!!!!\n", arrayPlayer[i].name);
+   	sigint_handler();
+   	}
 	printf("%s played!! \n", arrayPlayer[i].name);
 	sem_wait(semMemCardsPile);
 	printf("pile de cartes :%s\n", cardsPile);
@@ -133,26 +138,31 @@ void initMemoireLobby(){
 
 void readMemoireLobby()
 {
+/*strcpy(seg_ptg, "\0");*/
+int nbJoueursLobby;
 printf("seg : %s\n", seg_ptg);
+char * playersRaw[MAXPLAYERS]; 
 char *tokenAll = strtok(seg_ptg,";");
 while (tokenAll != NULL) {
-	struct player player_i;
-	char *tokenName = strtok(tokenAll,":"); //todo modify in order to handle multiple players to be added at the same time
-	//because strtok modifies initial string
-	int tokenPID =  atoi(strtok(NULL, ";"));
-	player_i.name = malloc(sizeof(char)*10);
-	strcpy(player_i.name, tokenName);
-	strcat(player_i.name, "\0");
-	player_i.pid =  tokenPID;
-	printf("joueur %i, name:%s, pid:%i\n", nbJoueurs+1, player_i.name, player_i.pid );
+	printf("token All : %s\n", tokenAll);
+	playersRaw[nbJoueursLobby] = tokenAll;
 	tokenAll = strtok(NULL, ";");
-	arrayPlayer[nbJoueurs] = player_i;
-	nbJoueurs++;
-}
+	nbJoueursLobby++;
+	}
+	int i;
+	struct player player_i;
+	for (i =0; i < nbJoueursLobby; i++)
+	{
+	printf("%s\n", playersRaw[i]);
+	player_i.name = malloc(sizeof(char)*10);
+		strcpy(player_i.name,strtok(playersRaw[i], ":")); 
+		player_i.pid=atoi(strtok(NULL, ":"));
+		arrayPlayer[nbJoueurs] = player_i;
+		nbJoueurs++;		
+	}
 printf("Current players in the lobby:\n");
-size_t i;
 for (i = 0; i < nbJoueurs; i++){
-printf("joueur %lu name: %s, pid:%i\n", i+1, arrayPlayer[i].name, arrayPlayer[i].pid);
+printf("joueur %i name: %s, pid:%i\n", i+1, arrayPlayer[i].name, arrayPlayer[i].pid);
 }
 strcpy(seg_ptg, "\0");
 }
@@ -258,7 +268,6 @@ int rand_range(int upper_limit) {
 
 void sigint_handler(int sig, siginfo_t *si, void* arg)
 {
-	printf("received sigint\n");
 	int i;
 	for (i=0; i < nbJoueurs; i++){
 	printf("sending sigint to pid : %i\n", arrayPlayer[i].pid);
@@ -270,6 +279,7 @@ void sigint_handler(int sig, siginfo_t *si, void* arg)
 }
 
 void sig_handler_empty(){}
+
 
 
 
