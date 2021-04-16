@@ -98,8 +98,8 @@ int main() {
  */
 void initMemoireLobby(){
 	key_t cleSegment;
-	CHECK(cleSegment=ftok("/memLobby", 1), "fack, can't create key");
-	CHECK(shmId=shmget(cleSegment, 200 * sizeof(char), IPC_CREAT | SHM_R | SHM_W), "fack, can't create shm");
+	CHECK(cleSegment=ftok("/memLobby", 1), "error, can't create key");
+	CHECK(shmId=shmget(cleSegment, 200 * sizeof(char), IPC_CREAT | SHM_R | SHM_W), "error, can't create shm");
 	printf("shm ID : %i \n", shmId);
 	seg_ptg = (char*) shmat(shmId, NULL, 0);
 }
@@ -154,8 +154,8 @@ void destroyMemoireLobby(){
  */
 void initMemoirePileCartes(){
 	key_t cleSegment;
-	CHECK(cleSegment=ftok("/memCardsPile", 1), "fack, can't create key");
-	CHECK(shmIdCardsPile=shmget(cleSegment, 200 * sizeof(char), IPC_CREAT | SHM_R | SHM_W), "fack, can't create shm");
+	CHECK(cleSegment=ftok("/memCardsPile", 1), "error, can't create key");
+	CHECK(shmIdCardsPile=shmget(cleSegment, 200 * sizeof(char), IPC_CREAT | SHM_R | SHM_W), "error, can't create shm");
 	printf("shm ID : %i \n", shmIdCardsPile);
 	cardsPile = (char*) shmat(shmId, NULL, 0);
 }
@@ -288,7 +288,7 @@ int rand_range(int upper_limit) {
  * Description : permet de dérouter le signal de fin de partie, detruire les
  * mémoires partagées et quitter le programme
  */
-void sigint_handler(int sig, siginfo_t *si, void* arg)
+void sigint_handler()
 {
 	int i;
 	for (i=0; i < nbJoueurs; i++){

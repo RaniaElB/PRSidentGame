@@ -137,7 +137,7 @@ int main(int argc,char * argv[])
 void initMemoireLobby(){
 	key_t cleSegment;
 	CHECK(cleSegment=ftok("/memLobby", 1), "error, can't create key");
-	CHECK(shmId=shmget(cleSegment, 200 * sizeof(char), IPC_CREAT | SHM_R | SHM_W), "fack, can't create shm");
+	CHECK(shmId=shmget(cleSegment, 200 * sizeof(char), IPC_CREAT | SHM_R | SHM_W), "error, can't create shm");
 	struct shmid_ds shmid_stats;
    	shmctl(shmId, IPC_STAT, &shmid_stats);
 	printf("PID du créateur:%i\n", shmid_stats.shm_cpid); 
@@ -238,7 +238,7 @@ bool basicPlay(int index){
 			removeCard(index);
 			nbCards--;
 		}else{
-			printf("Enter the index of a higher value card\n");
+			printf("Enter the index of a higher value card or 100 to skip\n");
 			return false;
 		}
 	}
