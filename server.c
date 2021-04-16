@@ -99,8 +99,8 @@ int main() {
 void initMemoireLobby(){
 	fopen("memLobby", "w+");
 	key_t cleSegment;
-	CHECK(cleSegment=ftok("memLobby", 1), "fack, can't create key");
-	CHECK(shmId=shmget(cleSegment, 200 * sizeof(char), IPC_CREAT | SHM_R | SHM_W), "fack, can't create shm");
+	CHECK(cleSegment=ftok("memLobby", 1), "error, can't create key");
+	CHECK(shmId=shmget(cleSegment, 200 * sizeof(char), IPC_CREAT | SHM_R | SHM_W), "error, can't create shm");
 	printf("shm ID : %i \n", shmId);
 	seg_ptg = (char*) shmat(shmId, NULL, 0);
 }
@@ -113,7 +113,7 @@ void readMemoireLobby()
 {
 	/*strcpy(seg_ptg, "\0");*/
 	int nbJoueursLobby;
-	printf("seg : %s\n", seg_ptg);
+	/*printf("seg : %s\n", seg_ptg);*/
 	char * playersRaw[MAXPLAYERS]; 
 	char *tokenAll = strtok(seg_ptg,";");
 	while (tokenAll != NULL) {
@@ -156,8 +156,8 @@ void destroyMemoireLobby(){
 void initMemoirePileCartes(){
 	fopen("memCardsPile", "w+");
 	key_t cleSegment;
-	CHECK(cleSegment=ftok("memCardsPile", 1), "fack, can't create key");
-	CHECK(shmIdCardsPile=shmget(cleSegment, 200 * sizeof(char), IPC_CREAT | SHM_R | SHM_W), "fack, can't create shm");
+	CHECK(cleSegment=ftok("memCardsPile", 1), "error, can't create key");
+	CHECK(shmIdCardsPile=shmget(cleSegment, 200 * sizeof(char), IPC_CREAT | SHM_R | SHM_W), "error, can't create shm");
 	printf("shm ID : %i \n", shmIdCardsPile);
 	cardsPile = (char*) shmat(shmId, NULL, 0);
 }

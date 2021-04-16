@@ -80,7 +80,7 @@ int main(int argc,char * argv[])
 			}
     		system("clear");
      		printf("==== %s ====\n", myName);
-   			printf("cardsPile : [%s]\n", cardsPile); 
+		/*printf("cardsPile : [%s]\n", cardsPile); */
 
     		switch(signal){
    				case SIGUSR1:
@@ -89,7 +89,6 @@ int main(int argc,char * argv[])
 	 				if(maDerniereCarte == cartePrecedente){
 						printf("Plus personne ne peut jouer au dessus\n\n");
 						cartePrecedente = -1;
-						/*		strcpy(cardsPile,"");*/
 						cardsPile[0] = '\0';
 	 				}
 	 				sem_post(semMemCardsPile);
@@ -102,7 +101,7 @@ int main(int argc,char * argv[])
      	 				scanf("%i",&index);
 	 				}while(!(basicPlay(index)));
 	 				if (nbCards == 0){
-	      				printf("to server : kill(%i, SIGUSR2);\n", pidServer);
+	      				printf("BRAVO, VOUS AVEZ GAGNE !!!\n");
 	     				kill(pidServer, SIGUSR2);
 	     				exit(0);
 	 				} else{
@@ -137,7 +136,7 @@ int main(int argc,char * argv[])
 void initMemoireLobby(){
 	key_t cleSegment;
 	CHECK(cleSegment=ftok("memLobby", 1), "error, can't create key");
-	CHECK(shmId=shmget(cleSegment, 200 * sizeof(char), IPC_CREAT | SHM_R | SHM_W), "fack, can't create shm");
+	CHECK(shmId=shmget(cleSegment, 200 * sizeof(char), IPC_CREAT | SHM_R | SHM_W), "erro, can't create shm");
 	struct shmid_ds shmid_stats;
    	shmctl(shmId, IPC_STAT, &shmid_stats);
 	printf("PID du créateur:%i\n", shmid_stats.shm_cpid); 
