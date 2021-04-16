@@ -132,7 +132,7 @@ int main(int argc,char * argv[])
 }
 /**
  * Fonction : initMemoireLobby
- * Description : initalize la mémoire  partagée memLobby qui contient la liste des joueurs.
+ * Description : initalise la mémoire  partagée memLobby qui contient la liste des joueurs.
  */
 void initMemoireLobby(){
 	key_t cleSegment;
@@ -177,7 +177,7 @@ void inscriptionJoueur(){
 }
 /**
  * Fonction : initMemoirePileCartes
- * Description : initialize la mémoire partagée de la pile de cartes.
+ * Description : initialise la mémoire partagée de la pile de cartes.
  */
 void initMemoirePileCartes(){
 	key_t cleSegment;
@@ -265,14 +265,12 @@ void readCardPile(){
 /**
  * Fonction : sig_handler_empty
  * Description : permet de dérouter le signal 
- * l’afficher.
  */
 void sig_handler_empty(){}
 
 /**
  * Fonction : sigint_handler
  * Description : permet de dérouter le signal de fin de partie et de quitter le programme
- * l’afficher.
  */
 void sigint_handler(){
 	printf("partie terminée\n");
