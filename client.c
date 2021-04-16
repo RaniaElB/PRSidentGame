@@ -22,7 +22,7 @@ void sig_handler_empty();
 void sigint_handler();
 void afficher_cartes();
 int decode_msg_payload(char** raw_payload, int* decoded_payload, int max_elements); 
-bool basicPlay(int index,char * message);
+bool basicPlay(int index);
 void readCardPile();
 int cards[DECK_SIZE/2]; // todo : set la taille de cards un peu mieux
 int nbCards;
@@ -123,9 +123,9 @@ printf("ppc : %s\n", path_pipe_client);
 	}
     system("clear");
      printf("==== %s ====\n", myName);
+   printf("cardsPile : [%s]\n", cardsPile); 
     switch(signal){
    case SIGUSR1:
-   printf("cardsPile : [%s]\n", cardsPile); 
      sem_wait(semMemCardsPile);
 	 readCardPile();
 	 if(maDerniereCarte == cartePrecedente){
@@ -142,7 +142,7 @@ printf("ppc : %s\n", path_pipe_client);
 	 do{
 		 printf("please enter the index of the card you want to play :\n"); 
      	 scanf("%i",&index);
-	 }while(!(basicPlay(index, cardsPile)));
+	 }while(!(basicPlay(index)));
 	 if (nbCards == 0){
 	      printf("to server : kill(%i, SIGUSR2);\n", pidServer);
 	     kill(pidServer, SIGUSR2);
@@ -210,16 +210,17 @@ void input (char * string, int length){
 	*string = '\0';  
 }
 
-bool basicPlay(int index, char * message){
+bool basicPlay(int index){
 	if(index != 100){
 	printf("basicPlay- index : %d\n", index);
 	maDerniereCarte = cards[index];
-	
 	if(cardsPile[0] == '\0' || get_card_points(cards[index]) > get_card_points(cartePrecedente)){
+	char message[3];
 		sprintf(message, "%i ",cards[index]);
      	printf("you selected : %s\n", get_card_name(cards[index])); 
 	 	fprintf(stdout,"Client - message envoyé au serveur : '%s'\n",message);
 		sem_wait(semMemCardsPile);
+		strcpy(cardsPile, "\0");
 		strcat(cardsPile, message);
 		sem_post(semMemCardsPile);
 		removeCard(index);
